@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.2.7)
+cmake_minimum_required(VERSION 3.2.7 FATAL_ERROR)
+
+include_directories("GUI" "Link")
+
 project(chat_ABob)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(SFML 2.5 COMPONENTS graphics audio REQUIRED)
+# find_package(SFML 2.5 COMPONENTS graphics audio REQUIRED)
 
 add_executable(chat_ABob main.cpp)
 
-target_link_libraries(chat_ABob sfml-graphics sfml-audio)
+# target_link_libraries(chat_ABob sfml-graphics sfml-audio)

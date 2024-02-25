@@ -2,6 +2,8 @@
 
 int main()
 {
-    std::cout << "zhopa";
+    std::cout << "worked\n";
+
+    
     return 0;
 }
