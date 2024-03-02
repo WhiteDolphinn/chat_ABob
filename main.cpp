@@ -1,9 +1,12 @@
 #include <iostream>
+#include "user.hpp"
+#include "gui.hpp"
 
 int main()
 {
-    std::cout << "worked\n";
-
-    
+    User user(4, "Belarusian");
+    GUI gui(user);
+    gui.draw();
+    //std::cout << "worked\n";
     return 0;
 }

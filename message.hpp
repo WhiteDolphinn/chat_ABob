@@ -1,14 +1,15 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cstdint>
 
 typedef unsigned id;
-typedef unsigned int64_t time;
+//typedef uint64_t time;
 
 struct message{
     id sender;
     std::vector<id> receivers;
     std::string text;
-    time time;
+    //time time;
     std::string name;
 };

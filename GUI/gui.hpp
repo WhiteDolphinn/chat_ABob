@@ -1,15 +1,14 @@
 #pragma once
-//#include <SFML/Window.hpp>
-#include "chat.hpp"
-#include "window.hpp"
+#include "../user.hpp"
 
 
 class GUI{
     private:
-    Chat chat;
-    window window;
+    User& user;
     public:
-    message get_message();
-    void push_message(message message);
-    void update();
+    GUI(User& user_)
+    : user(user_)
+    {
+    };
+    void draw();
 };

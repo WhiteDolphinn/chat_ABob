@@ -1,5 +1,5 @@
 #pragma once
-#include "message.hpp"
+#include "../message.hpp"
 #include "terminal.hpp"
 #include <vector>
 
