@@ -30,4 +30,4 @@ add_executable(chat_ABob main.cpp
                          GUI/terminal.cpp
                          GUI/terminal.hpp)
 
-target_link_libraries(chat_ABob sfml-graphics sfml-audio sfml-system tgui)
+target_link_libraries(chat_ABob sfml-graphics sfml-audio sfml-system sfml-window tgui)

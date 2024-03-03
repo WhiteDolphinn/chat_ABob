@@ -1,6 +1,7 @@
 #include "gui.hpp"
 #include <TGUI/TGUI.hpp>
 #include <TGUI/Backend/SFML-Graphics.hpp>
+//#include <SFML/Graphics.hpp>
 
 void GUI::draw()
 {
