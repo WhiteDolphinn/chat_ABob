@@ -23,6 +23,17 @@ class SSP(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def quic_send(self, stream_id, message, flag=False)->None:
+        data = message.encode("utf-8")
+        data = struct.pack("!H", len(data))+data
+        self._quic.send_stream_data(stream_id, data, end_stream=flag)
+        self.transmit()
+
+    def quic_event_received(self, event: QuicEvent):
+        if isinstance(event,  StreamDataReceived):
+            src.dump.event(event)
+            self.quic_send(event.stream_id, "10")
+
 
 async def main(
         host:   str,
@@ -30,6 +41,14 @@ async def main(
         config: QuicConfiguration,
         retry:  bool,
 )->None:
+    await serve(
+        host,
+        port,
+        configuration   = config,
+        create_protocol = SSP,
+        retry           = retry,
+    )
+    await asyncio.Future()
     src.dump.final()
 
 

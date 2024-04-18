@@ -1,6 +1,7 @@
 import datetime
 import subprocess
 import os
+from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTerminated
 
 
 class colors:
@@ -23,8 +24,12 @@ def hello(host, port):
     print('-'*os.get_terminal_size().columns)
 
 
-def event():
-    pass
+def event(event_):
+    print(f"time:{datetime.datetime.now().strftime(' %H:%M:%S')}",
+          colors.GREEN+
+          f"\t\tmes:",
+          f"user {event_.stream_id} is writing",
+          colors.DEFAULT)
 
 
 def users():
