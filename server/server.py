@@ -10,9 +10,9 @@ from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTerminated
 
 import src.dump
-import src.json
 import src.mysql
 import src.user
+from   src.myjson import *
 
 
 try: import uvloop
@@ -23,16 +23,15 @@ class SSP(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def quic_send(self, stream_id, message, flag=False)->None:
-        data = message.encode("utf-8")
-        data = struct.pack("!H", len(data))+data
-        self._quic.send_stream_data(stream_id, data, end_stream=flag)
+    def quic_send(self, stream_id, frame, flag=False)->None:
+        self._quic.send_stream_data(stream_id, frame.to_json(), end_stream=flag)
         self.transmit()
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event,  StreamDataReceived):
+            frame = Frame(event).from_json()
             src.dump.event(event)
-            self.quic_send(event.stream_id, "10")
+            self.quic_send(event.stream_id, frame)
 
 
 async def main(
