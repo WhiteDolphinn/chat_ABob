@@ -2,6 +2,7 @@ import datetime
 import subprocess
 import os
 from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTerminated
+import src.myjson
 
 
 class colors:
@@ -32,6 +33,11 @@ def event(event_):
           f"user {event_.stream_id} is writing",
           colors.DEFAULT)
     
+
+def frame_dump(string:src.myjson.Frame):
+    print(colors.GREEN+
+          str(string)+
+          colors.DEFAULT)
 
 
 def users():

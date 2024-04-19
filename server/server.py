@@ -2,8 +2,7 @@ import asyncio
 import logging
 import sys
 import logging
-import struct
-import json
+
 
 from aioquic.asyncio import QuicConnectionProtocol, serve
 from aioquic.quic.configuration import QuicConfiguration
@@ -23,6 +22,7 @@ class SSP(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.users_db = src.mysql.UsersList()
+        self.user     = None
 
 
     def quic_send(self, stream_id, frame, flag=False)->None:
@@ -33,24 +33,30 @@ class SSP(QuicConnectionProtocol):
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event,  StreamDataReceived):
             frame = Frame(event).from_json()
+            src.dump.frame_dump(frame)
 
-            if frame.type == TYPE.SIG:
-                self.sing_up(frame=frame, event=event)
-
-            # print(frame)
-            # print(self.users_db.amout())
-            # ack = Ack()
-            # src.dump.event(event)
-            # self.quic_send(event.stream_id, ack)
+            if self.user == None:
+                if frame.type == TYPE.SIG:
+                    self.sing_up(frame=frame, event=event)
+                else:
+                    self.quic_send(event.stream_id, Den(), True)
+            else:
+                if frame.type == TYPE.CON:
+                    self.chat_control(frame=frame, event=event)
 
 
     def sing_up(self, frame: Sig, event: StreamDataReceived):
         result = self.users_db.add(frame=frame)
-        if result:
-            answer = Ack()
-        else:
+        if result == TYPE.DEN:
             answer = Den()
+        else:
+            answer = Ack()
+            self.user = result
         self.quic_send(event.stream_id, answer)
+
+
+    def chat_control(self, frame: ControlFrame, event: StreamDataReceived):
+        pass
 
 
 async def main(

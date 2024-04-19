@@ -1,5 +1,6 @@
 import sqlite3
 import src.myjson
+import src.user
 from random import randint
 
 
@@ -11,23 +12,29 @@ class UsersList():
             CREATE TABLE IF NOT EXISTS Users(
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL,
-            password TEXT NOT NULL)''')
+            password TEXT NOT NULL,
+            object TEXT NOT NULL)''')
         
         if not self.find(id=0):
             self.cursor.execute(
-            "INSERT INTO Users (id, username, password) VALUES (?, ?, ?)",
-            (0, "count", f"1"))
+            "INSERT INTO Users (id, username, password, object) VALUES (?, ?, ?, ?)",
+            (0, "count", f"1", 'plain text'))
+            self.connection.commit()
     
 
     def __del__(self):
         self.connection.commit()
+        print("distuctor")
         self.connection.close()
 
 
     def add(self, frame = 0, name = 0, password = 0):
         if self.find(frame, name): 
-            if self.auth(frame = 0, name = 0, password = 0):
-                return src.myjson.TYPE.ACK
+            if self.auth(frame, name, password):
+                self.cursor.execute("SELECT * FROM Users WHERE username = ?", (name,))
+                print(self.cursor.fetchall())
+                user = src.user.User().from_json(self.cursor.fetchall()[0][3])
+                return user
             else:
                 return src.myjson.TYPE.DEN
             
@@ -35,12 +42,15 @@ class UsersList():
             username = frame.name
             password = frame.password
 
-        id = self.amout()+1
         self.update_amout()
+        id = self.amout()
+        user = src.user.User(username, id)
         self.cursor.execute(
-            "INSERT INTO Users (id, username, password) VALUES (?, ?, ?)",
-            (id, username, password))
-        pass
+            "INSERT INTO Users (id, username, password, object) VALUES (?, ?, ?, ?)",
+            (id, username, password, user.to_json()))
+        self.connection.commit()
+        
+        return user
 
 
     def rm(self, frame = 0, name = 0):
@@ -64,7 +74,7 @@ class UsersList():
             username = frame.name
             password = frame.password
         self.cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-        return password == self.cursor.fetchone()[0][2]
+        return password == self.cursor.fetchall()[0][2]
     
     def amout(self):
         self.cursor.execute("SELECT * FROM Users WHERE username = ?", ("count",))
@@ -73,3 +83,4 @@ class UsersList():
     def update_amout(self):
         num = self.amout()
         self.cursor.execute("UPDATE Users SET password = ? WHERE username = ?", (str(num), "count"))
+        self.connection.commit()

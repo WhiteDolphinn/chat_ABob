@@ -1,15 +1,13 @@
+import json
+
 users_list = dict()
 
 
-def verification(login, password):
-    return 1
-
-
-class user:
-    chats = dict()
-    stream_id = 0
-    def __init__(self, stream_id) -> None:
-        self.stream_id = stream_id
+class User:
+    def __init__(self, name = "username", id = 0) -> None:
+        self.id        = id
+        self.name      = name
+        self.chats     = []
 
     def create_chat():
         pass
@@ -28,3 +26,23 @@ class user:
 
     def ban_user():
         pass
+
+    def to_json(self):
+        return json.dumps({
+            "id": self.id,
+            "name": self.name,
+            "chats": self.chats
+        })
+    
+    def from_json(self, mess):
+        mess = json.load(mess)
+        self.id        = mess["id"]
+        self.name      = mess["name"]
+        self.chats     = mess["chats"]
+
+
+class Chat:
+    chat_id     = None
+    users       = dict()
+    admin       = None
+    messages    = 0

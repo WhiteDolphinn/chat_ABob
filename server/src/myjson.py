@@ -13,6 +13,7 @@ class TYPE:
     #server conditions
     ACK = "ACK" #acknowledgement
     DEN = "DEN" #denay of servise
+    INF = "INF" #server sends userinfo
     CHT = "CHT" #server sands chat
     SEN = "UPD" #server sands messages
 
@@ -20,6 +21,15 @@ class TYPE:
 
     type_list = ["SIG", "CON", "SEN", "PUL", "ACK",
                  "DEN", "CHT", "UPD", "DFT"]
+    
+
+class ACTION:
+    #actions with chats
+    CREAT   = "CREAT"
+    DEL     = "DEL"
+    BUN     = "BUN"
+    ADD     = "ADD"
+    DEFAULT = "DEF"
 
 
 class Frame():
@@ -110,9 +120,23 @@ class Den(Frame):
         self.type = TYPE.DEN
 
 
-    
-
-
-
-        
-
+class ControlFrame(Frame):
+    def __init__(self, 
+                 event = 0, 
+                 chat_id = 0, 
+                 user_id = 0, 
+                 action = ACTION.DEFAULT):
+        super().__init__(event)
+        self.type = TYPE.CON
+        try:
+            if event:
+                self.event   = event
+                self.chat_id = self.mess["chat_id"]
+                self.user_id = self.mess["user_id"]
+                self.action  = self.mess["action"] 
+            else:
+                self.chat_id = chat_id
+                self.user_id = user_id
+                self.action  = action 
+        except Exception:
+            self.valid = -1
