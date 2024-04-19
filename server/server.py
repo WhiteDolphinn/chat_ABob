@@ -22,16 +22,35 @@ except ImportError: uvloop = None
 class SSP(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.users_db = src.mysql.UsersList()
+
 
     def quic_send(self, stream_id, frame, flag=False)->None:
         self._quic.send_stream_data(stream_id, frame.to_json(), end_stream=flag)
         self.transmit()
 
+
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event,  StreamDataReceived):
             frame = Frame(event).from_json()
-            src.dump.event(event)
-            self.quic_send(event.stream_id, frame)
+
+            if frame.type == TYPE.SIG:
+                self.sing_up(frame=frame, event=event)
+
+            # print(frame)
+            # print(self.users_db.amout())
+            # ack = Ack()
+            # src.dump.event(event)
+            # self.quic_send(event.stream_id, ack)
+
+
+    def sing_up(self, frame: Sig, event: StreamDataReceived):
+        result = self.users_db.add(frame=frame)
+        if result:
+            answer = Ack()
+        else:
+            answer = Den()
+        self.quic_send(event.stream_id, answer)
 
 
 async def main(
@@ -40,6 +59,7 @@ async def main(
         config: QuicConfiguration,
         retry:  bool,
 )->None:
+    
     await serve(
         host,
         port,

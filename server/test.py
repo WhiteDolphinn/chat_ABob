@@ -21,18 +21,19 @@ class User(QuicConnectionProtocol):
     
     async def sync(self, name):
         self.stream_id = self._quic.get_next_available_stream_id()
-        frame = Frame() 
+        frame = Sig(name=name, password="12345")
         await self.send(frame)
 
 
     async def send(self, frame)->None:
+        print(frame)
         self._quic.send_stream_data(self.stream_id, frame.to_json(), end_stream=False)
         self.transmit()
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            recv_mes = event.data[2:].decode('utf-8')
-            print(recv_mes) 
+            frame = Frame(event).from_json()
+            print(frame) 
 
 
 

@@ -14,8 +14,9 @@ class colors:
 
 def hello(host, port):
     subprocess.call("clear")
+    print("\033[15С", end="", flush=True)
     print(colors.RED+
-          f"host:{host}",
+          f"host: {host}",
           f"\tport: {port}",
           f"\ntime:{datetime.datetime.now().strftime(' %H:%M:%S')}",
           f"\t\tmes:",
@@ -30,6 +31,7 @@ def event(event_):
           f"\t\tmes:",
           f"user {event_.stream_id} is writing",
           colors.DEFAULT)
+    
 
 
 def users():
