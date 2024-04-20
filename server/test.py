@@ -38,8 +38,8 @@ class User(QuicConnectionProtocol):
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            frame = Frame(event).from_json()
-            print(frame) 
+            frame = Frame(event)
+            frame = frame.from_json()
 
 
 async def main(

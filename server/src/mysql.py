@@ -24,7 +24,6 @@ class UsersList():
 
     def __del__(self):
         self.connection.commit()
-        print("distuctor")
         self.connection.close()
 
 

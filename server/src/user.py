@@ -4,7 +4,7 @@ users_list = dict()
 
 
 class User:
-    def __init__(self, name = "username", id = 0, stream_id = 0) -> None:
+    def __init__(self, name = "username", id = 0) -> None:
         self.id        = id
         self.name      = name
         self.chats     = []
@@ -35,13 +35,23 @@ class User:
         })
     
     def from_json(self, js_mess):
-        self.id        = js_mess[0]
-        self.name      = js_mess[1]
-        self.chats     = js_mess[2]
+        js_mess = json.loads(js_mess)
+        print(js_mess)
+        self.id        = js_mess['id']
+        self.name      = js_mess["name"]
+        self.chats     = js_mess['chats']
 
 
 class Chat:
-    chat_id     = None
-    admin       = None
     users       = []
-    messages    = 0
+    messages    = []
+
+    def __init__(self, id, admin):
+        self.chat_id = id
+        self.admin = admin
+
+    
+
+
+
+

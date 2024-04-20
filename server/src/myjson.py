@@ -2,6 +2,7 @@ import datetime
 from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTerminated
 import json
 import struct
+from src.user import User
 
 class TYPE:
     #user conditions
@@ -60,6 +61,8 @@ class Frame():
             return Ack(self.event)
         if self.type == TYPE.DEN:
             return Den(self.event)
+        if self.type == TYPE.INF:
+            return InfoFrame(event=self.event)
         if self.type == TYPE.DFT:
             return self
 
@@ -140,3 +143,24 @@ class ControlFrame(Frame):
                 self.action  = action 
         except Exception:
             self.valid = -1
+
+
+class InfoFrame(Frame):
+    type = TYPE.INF
+    user = None
+    def __init__(self, user = None, event = 0):
+        super().__init__(event=event)
+        self.user = user
+
+        if event:
+            print(self.mess["user"])
+            self.user = User()
+            self.user.from_json(self.mess["user"])
+
+    def to_json(self):
+        frame = json.dumps({
+                "type": self.type,
+                "time": self.time,
+                "user": self.user.to_json()
+                }).encode("utf-8")
+        return struct.pack("!H", len(frame))+frame

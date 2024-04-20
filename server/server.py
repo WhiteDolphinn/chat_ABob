@@ -46,14 +46,14 @@ class SSP(QuicConnectionProtocol):
 
     def sing_up(self, frame: Sig, event: StreamDataReceived):
         if self.user != None:
-            answer = Ack()
+            answer = InfoFrame(self.user)
         else:
             result = self.users_db.add(frame=frame)
             if result == TYPE.DEN:
                 answer = Den()
             else:
-                answer = Ack()
                 self.user = result
+                answer = InfoFrame(self.user)
         self.quic_send(event.stream_id, answer)
 
 
