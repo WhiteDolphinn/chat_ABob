@@ -39,7 +39,7 @@ class SSP(QuicConnectionProtocol):
             if frame.type == TYPE.SIG:
                 self.sing_up(frame=frame, event=event)
             elif self.user == None:
-                self.quic_send(event.stream_id, Den(), True)
+                self.quic_send(event.stream_id, Den())
             elif frame.type == TYPE.CON:
                 self.chat_control(frame=frame, event=event)
 

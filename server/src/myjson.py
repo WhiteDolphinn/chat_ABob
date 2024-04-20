@@ -54,14 +54,14 @@ class Frame():
 
 
     def from_json(self):
-        if self.type == TYPE.DFT:
-            return self
         if self.type == TYPE.SIG:
             return Sig(self.event)
         if self.type == TYPE.ACK:
             return Ack(self.event)
         if self.type == TYPE.DEN:
             return Den(self.event)
+        if self.type == TYPE.DFT:
+            return self
 
 
     def to_json(self):

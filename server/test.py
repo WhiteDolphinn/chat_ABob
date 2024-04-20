@@ -22,7 +22,10 @@ class User(QuicConnectionProtocol):
     
     async def sync(self, argv):
         self.stream_id = self._quic.get_next_available_stream_id()
-        frame = Sig(name=argv[2], password=argv[3])
+        if len(argv) > 4 and argv[4] == 'd':
+            frame = Sig(name=argv[2], password=argv[3])
+        else:
+            frame = Ack()
         for i in range(100):
             await self.send(frame)
             await asyncio.sleep(3)

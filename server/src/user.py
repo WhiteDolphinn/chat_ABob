@@ -8,7 +8,6 @@ class User:
         self.id        = id
         self.name      = name
         self.chats     = []
-        self.stream_id = stream_id
 
     def create_chat():
         pass
@@ -43,6 +42,6 @@ class User:
 
 class Chat:
     chat_id     = None
-    users       = dict()
     admin       = None
+    users       = []
     messages    = 0
