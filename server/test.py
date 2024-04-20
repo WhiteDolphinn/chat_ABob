@@ -2,6 +2,7 @@ import asyncio
 import logging
 import ssl
 import sys
+from random import randint
 from typing import cast
 
 from aioquic.asyncio.client import connect
@@ -19,10 +20,12 @@ class User(QuicConnectionProtocol):
         self.message_buffer = []
 
     
-    async def sync(self, name):
+    async def sync(self, argv):
         self.stream_id = self._quic.get_next_available_stream_id()
-        frame = Sig(name=name, password="12345")
-        await self.send(frame)
+        frame = Sig(name=argv[2], password=argv[3])
+        for i in range(100):
+            await self.send(frame)
+            await asyncio.sleep(3)
 
 
     async def send(self, frame)->None:
@@ -36,12 +39,11 @@ class User(QuicConnectionProtocol):
             print(frame) 
 
 
-
 async def main(
         config: QuicConfiguration,
         host: str,
         port: int,
-        message: str,
+        argv: list,
         local_port: int,
 )->None:
     async with connect(
@@ -53,20 +55,20 @@ async def main(
         create_protocol=User
     ) as client:
         client = cast(User, client)
-        await client.sync(message)
-        await asyncio.sleep(0.1)
+        await client.sync(argv)
+        await asyncio.sleep(10)
     
 
 if __name__ == "__main__":
     argv = sys.argv
-    if len(argv) != 5:
+    if len(argv) < 2:
         print(f"Wrong input values: {argv}")
         exit()
 
-    host = "127.0.0.1" if argv[1] == "d" else argv[1]
-    port = 8000        if argv[2] == "d" else int(argv[2])
-    uport= 2000        if argv[3] == "d" else int(argv[3])
-    message = argv[4]
+    host = "127.0.0.1" if argv[1] == "-l" else "185.198.152.16"
+    port = 8000     
+    uport= randint(2000, 6553)        
+    message = argv[2]
 
     config = QuicConfiguration(
         is_client=True,
@@ -80,7 +82,7 @@ if __name__ == "__main__":
             host=host,
             port=port,
             config=config,
-            message=message,
+            argv=argv,
             local_port=uport,
         )
     )

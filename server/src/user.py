@@ -4,10 +4,11 @@ users_list = dict()
 
 
 class User:
-    def __init__(self, name = "username", id = 0) -> None:
+    def __init__(self, name = "username", id = 0, stream_id = 0) -> None:
         self.id        = id
         self.name      = name
         self.chats     = []
+        self.stream_id = stream_id
 
     def create_chat():
         pass
@@ -34,11 +35,10 @@ class User:
             "chats": self.chats
         })
     
-    def from_json(self, mess):
-        mess = json.load(mess)
-        self.id        = mess["id"]
-        self.name      = mess["name"]
-        self.chats     = mess["chats"]
+    def from_json(self, js_mess):
+        self.id        = js_mess[0]
+        self.name      = js_mess[1]
+        self.chats     = js_mess[2]
 
 
 class Chat:

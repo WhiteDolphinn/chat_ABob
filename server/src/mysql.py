@@ -28,12 +28,16 @@ class UsersList():
         self.connection.close()
 
 
-    def add(self, frame = 0, name = 0, password = 0):
-        if self.find(frame, name): 
-            if self.auth(frame, name, password):
-                self.cursor.execute("SELECT * FROM Users WHERE username = ?", (name,))
-                print(self.cursor.fetchall())
-                user = src.user.User().from_json(self.cursor.fetchall()[0][3])
+    def add(self, frame = 0, username = 0, password = 0):
+        if isinstance(frame, src.myjson.Sig):
+            username = frame.name
+            password = frame.password
+        data = self.find(username = username)
+
+        if data:
+            if password == data[2]:
+                user = src.user.User()
+                user.from_json(data[3])
                 return user
             else:
                 return src.myjson.TYPE.DEN
@@ -42,8 +46,7 @@ class UsersList():
             username = frame.name
             password = frame.password
 
-        self.update_amout()
-        id = self.amout()
+        id = self.update_amout()
         user = src.user.User(username, id)
         self.cursor.execute(
             "INSERT INTO Users (id, username, password, object) VALUES (?, ?, ?, ?)",
@@ -74,6 +77,7 @@ class UsersList():
             username = frame.name
             password = frame.password
         self.cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+        print(self.find(username=username))
         return password == self.cursor.fetchall()[0][2]
     
     def amout(self):
@@ -81,6 +85,7 @@ class UsersList():
         return int(self.cursor.fetchall()[0][2])
 
     def update_amout(self):
-        num = self.amout()
+        num = self.amout() + 1
         self.cursor.execute("UPDATE Users SET password = ? WHERE username = ?", (str(num), "count"))
         self.connection.commit()
+        return num

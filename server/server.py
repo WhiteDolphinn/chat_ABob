@@ -32,26 +32,28 @@ class SSP(QuicConnectionProtocol):
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event,  StreamDataReceived):
+            src.dump.event(event_=event)
             frame = Frame(event).from_json()
             src.dump.frame_dump(frame)
 
-            if self.user == None:
-                if frame.type == TYPE.SIG:
-                    self.sing_up(frame=frame, event=event)
-                else:
-                    self.quic_send(event.stream_id, Den(), True)
-            else:
-                if frame.type == TYPE.CON:
-                    self.chat_control(frame=frame, event=event)
+            if frame.type == TYPE.SIG:
+                self.sing_up(frame=frame, event=event)
+            elif self.user == None:
+                self.quic_send(event.stream_id, Den(), True)
+            elif frame.type == TYPE.CON:
+                self.chat_control(frame=frame, event=event)
 
 
     def sing_up(self, frame: Sig, event: StreamDataReceived):
-        result = self.users_db.add(frame=frame)
-        if result == TYPE.DEN:
-            answer = Den()
-        else:
+        if self.user != None:
             answer = Ack()
-            self.user = result
+        else:
+            result = self.users_db.add(frame=frame)
+            if result == TYPE.DEN:
+                answer = Den()
+            else:
+                answer = Ack()
+                self.user = result
         self.quic_send(event.stream_id, answer)
 
 
