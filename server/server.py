@@ -9,7 +9,8 @@ from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTerminated
 
 import src.dump
-import src.mysql
+import src.userlist
+import src.chatlist
 import src.user
 from   src.myjson import *
 
@@ -21,7 +22,8 @@ except ImportError: uvloop = None
 class SSP(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.users_db = src.mysql.UsersList()
+        self.users_db = src.userlist.UsersList()
+        self.chats_db = src.chatlist.ChatList()
         self.user     = None
 
 
@@ -58,7 +60,9 @@ class SSP(QuicConnectionProtocol):
 
 
     def chat_control(self, frame: ControlFrame, event: StreamDataReceived):
-        pass
+        print(frame, frame.action)
+        if frame.action == ACTION.CREAT:
+            answer = self.chats_db.add(self.user)
 
 
 async def main(

@@ -18,6 +18,7 @@ class User(QuicConnectionProtocol):
         self.stream_id = None
         self.uesrname = None
         self.message_buffer = []
+        self.frame = None
 
     
     async def sync(self, argv):
@@ -26,9 +27,13 @@ class User(QuicConnectionProtocol):
             frame = Sig(name=argv[2], password=argv[3])
         else:
             frame = Ack()
-        for i in range(100):
+        await self.send(frame)
+        await asyncio.sleep(1)
+        if isinstance(self.frame, InfoFrame):
+            frame = ControlFrame(action=ACTION.CREAT)
+            print(frame.action)
             await self.send(frame)
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
 
     async def send(self, frame)->None:
@@ -36,10 +41,14 @@ class User(QuicConnectionProtocol):
         self._quic.send_stream_data(self.stream_id, frame.to_json(), end_stream=False)
         self.transmit()
 
+
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            frame = Frame(event)
-            frame = frame.from_json()
+            self.frame = Frame(event)
+            self.frame = self.frame.from_json()
+            print(self.frame)
+            
+
 
 
 async def main(

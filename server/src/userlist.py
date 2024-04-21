@@ -6,7 +6,7 @@ from random import randint
 
 class UsersList():
     def __init__(self) -> None:
-        self.connection = sqlite3.connect("database.db")
+        self.connection = sqlite3.connect("userlist.db")
         self.cursor     = self.connection.cursor()
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS Users(
