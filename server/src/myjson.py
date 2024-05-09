@@ -3,6 +3,7 @@ from aioquic.quic.events import QuicEvent, StreamDataReceived, ConnectionTermina
 import json
 import struct
 from src.user import User
+# from src.chatlist import Chat
 
 class TYPE:
     #user conditions
@@ -17,6 +18,7 @@ class TYPE:
     INF = "INF" #server sends userinfo
     CHT = "CHT" #server sands chat
     SEN = "UPD" #server sands messages
+    CHI = "CHI" #server sends chatinfo
 
     DFT = "DFT" #default
 
@@ -31,6 +33,8 @@ class ACTION:
     BUN     = "BUN"
     ADD     = "ADD"
     DEFAULT = "DEF"
+    EXIT    = "EXIT"
+    INFO    = "INFO"
 
 
 class Frame():
@@ -65,6 +69,8 @@ class Frame():
             return InfoFrame(event=self.event)
         if self.type == TYPE.CON:
             return ControlFrame(event=self.event)
+        if self.type == TYPE.CHI:
+            return ChatInfoFrame(event=self.event)
         if self.type == TYPE.DFT:
             return self
 
@@ -138,15 +144,15 @@ class ControlFrame(Frame):
         super().__init__(event)
         self.type = TYPE.CON
         try:
+            print(event)
             if event:
                 self.event   = event
-                print(self.mess)
-                self.chat_id = self.mess["chat_id"]
-                self.user_id = self.mess["user_id"]
+                self.chat_id = int(self.mess["chat_id"])
+                self.user_id = int(self.mess["user_id"])
                 self.action  = self.mess["action"] 
             else:
-                self.chat_id = chat_id
-                self.user_id = user_id
+                self.chat_id = int(chat_id)
+                self.user_id = int(user_id)
                 self.action  = action 
         except Exception:
             self.valid = -1
@@ -178,6 +184,25 @@ class InfoFrame(Frame):
                 "type": self.type,
                 "time": self.time,
                 "user": self.user.to_json()
+                }).encode("utf-8")
+        return struct.pack("!H", len(frame))+frame
+    
+
+class ChatInfoFrame(Frame):
+    type = TYPE.CHI
+    chat = None
+    def __init__(self, chat = None, event = 0):
+        super().__init__(event=event)
+        self.chat = chat
+
+        if event:
+            self.chat = self.mess["chat"]
+
+    def to_json(self):
+        frame = json.dumps({
+                "type": self.type,
+                "time": self.time,
+                "chat": self.chat
                 }).encode("utf-8")
         return struct.pack("!H", len(frame))+frame
 

@@ -66,6 +66,7 @@ class UsersList():
         
         if isinstance(frame, src.myjson.Sig):
             username = frame.name
+            
 
         self.cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
         return  self.cursor.fetchone()
@@ -88,3 +89,7 @@ class UsersList():
         self.cursor.execute("UPDATE Users SET password = ? WHERE username = ?", (str(num), "count"))
         self.connection.commit()
         return num
+    
+    def update_user(self, user: src.user.User):
+        self.cursor.execute("UPDATE Users SET object = ? WHERE username = ?", (user.to_json(), user.name))
+        self.connection.commit()

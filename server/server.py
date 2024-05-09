@@ -60,9 +60,70 @@ class SSP(QuicConnectionProtocol):
 
 
     def chat_control(self, frame: ControlFrame, event: StreamDataReceived):
-        print(frame, frame.action)
         if frame.action == ACTION.CREAT:
-            answer = self.chats_db.add(self.user)
+            chat_id = self.chats_db.add(self.user)
+            self.users_db.update_user(self.user)
+
+            answer = Ack()
+            self.quic_send(event.stream_id, answer)
+        else:
+            chat = src.chatlist.Chat()
+            chat.from_json(self.chats_db.find(frame.chat_id)[0][2])
+
+            if frame.action == ACTION.ADD:
+                user = src.user.User()
+                user.from_json(self.users_db.find(id=frame.user_id)[3])
+                answer = chat.add_user(self.user, user)
+                if isinstance(answer, Ack):
+                    if frame.chat_id not in user.chats:
+                        user.chats.append(int(frame.chat_id))
+                        self.users_db.update_user(user)
+                    self.chats_db.update_chat(chat)
+                self.quic_send(event.stream_id, answer)
+
+            if frame.action == ACTION.BUN:
+                user = src.user.User()
+                user.from_json(self.users_db.find(id=frame.user_id)[3])
+                answer = chat.del_user(self.user, user)
+                if isinstance(answer, Ack):
+                    if frame.chat_id in user.chats:
+                        user.chats.remove(frame.chat_id)
+                        self.users_db.update_user(user)
+                    self.chats_db.update_chat(chat)
+                self.quic_send(event.stream_id, answer)
+
+            if frame.action == ACTION.EXIT:
+                if chat.admin_id == self.user.id:
+                    answer = Den()
+                else:
+                    print("eee")
+                    user = self.user
+                    answer = chat.ext_user(user)
+                    if isinstance(answer, Ack):
+                        if frame.chat_id in user.chats:
+                            user.chats.remove(frame.chat_id)
+                            self.users_db.update_user(user)
+                        self.chats_db.update_chat(chat)
+                self.quic_send(event.stream_id, answer)
+
+            if frame.action == ACTION.DEL:
+                if chat.admin_id != self.user.id:
+                    answer = Den()
+                else:
+                    for i in chat.userlist:
+                        user = src.user.User()
+                        user.from_json(self.users_db.find(id=i)[3])
+                        if frame.chat_id in user.chats:
+                            user.chats.remove(frame.chat_id)
+                            self.users_db.update_user(user)
+                    self.chats_db.delite_chat(chat)
+                self.quic_send(event.stream_id, Ack())
+
+            if frame.action == ACTION.INFO:
+                self.quic_send(event.stream_id, ChatInfoFrame(chat=chat.to_json()))
+
+
+            
 
 
 async def main(

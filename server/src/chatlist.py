@@ -1,4 +1,5 @@
 import sqlite3
+import src.chatlist
 import src.myjson
 import src.user
 import json
@@ -44,6 +45,14 @@ class ChatList():
         self.cursor.execute("SELECT * FROM Chats WHERE id = ?", (id,))
         return self.cursor.fetchall()
     
+    def update_chat(self, chat):
+        self.cursor.execute("UPDATE Chats SET object = ? WHERE id = ?", (chat.to_json(), chat.chat_id))
+        self.connection.commit()
+
+    def delite_chat(self, chat):
+        self.cursor.execute("DELETE FROM Chats WHERE id = ?", (chat.chat_id,))
+        self.connection.commit()
+    
 
 class Chat():
     def __init__(self, chat_id = 0, admin_id = 0):
@@ -60,13 +69,28 @@ class Chat():
             text TEXT NOT NULL)''')
         
 
-    def add_user(self, user: src.user.User):
+    def add_user(self, user: src.user.User, added_user: src.user.User):
         if user.id == self.admin_id:
-            self.userlist[user.id] = user.name
+            self.userlist[added_user.id] = added_user.name
+            return src.myjson.Ack()
+        return src.myjson.Den()
 
-    def del_user(self, user: src.user.User):
+
+    def del_user(self, user: src.user.User, bunned_user: src.user.User):
         if user.id == self.admin_id:
-            del self.userlist[user.id]
+            if str(bunned_user.id) in self.userlist:
+                del self.userlist[str(bunned_user.id)]
+            return src.myjson.Ack()
+        return src.myjson.Den()
+    
+    
+    def ext_user(self, user: src.user.User):
+        print(user.id, self.userlist)
+        if str(user.id) in self.userlist:
+            del self.userlist[str(user.id)]
+            return src.myjson.Ack()
+        return src.myjson.Den()
+    
 
     def add_message(self, 
                     user:src.user.User, 
@@ -77,6 +101,7 @@ class Chat():
             self.cursor.execute(
             f"INSERT INTO Chats{self.chat_id}(name, time, text) VALUES (?, ?, ?)",
             (user.name, event.time, event.text))
+            return src.myjson.Ack()
     
     def to_json(self):
         return json.dumps({
@@ -86,7 +111,8 @@ class Chat():
         })
     
     def from_json(self, mess):
-        mess = json.loads(mess)
+        if not isinstance(mess, dict):
+            mess = json.loads(mess)
         self.chat_id  = mess["chat_id"]
         self.admin_id = mess["admin_id"]
         self.userlist = json.loads(mess["userlist"])

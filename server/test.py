@@ -2,7 +2,6 @@ import asyncio
 import logging
 import ssl
 import sys
-from random import randint
 from typing import cast
 
 from aioquic.asyncio.client import connect
@@ -18,36 +17,22 @@ class User(QuicConnectionProtocol):
         self.stream_id = None
         self.uesrname = None
         self.message_buffer = []
-        self.frame = None
 
-    
-    async def sync(self, argv):
+
+    async def sync(self, name):
         self.stream_id = self._quic.get_next_available_stream_id()
-        if len(argv) > 4 and argv[4] == 'd':
-            frame = Sig(name=argv[2], password=argv[3])
-        else:
-            frame = Ack()
+        frame = Sig(name='425425', password='ERWGER')
         await self.send(frame)
-        await asyncio.sleep(1)
-        if isinstance(self.frame, InfoFrame):
-            frame = ControlFrame(action=ACTION.CREAT)
-            print(frame.action)
-            await self.send(frame)
-            await asyncio.sleep(1)
 
 
     async def send(self, frame)->None:
-        print(frame)
         self._quic.send_stream_data(self.stream_id, frame.to_json(), end_stream=False)
         self.transmit()
 
-
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            self.frame = Frame(event)
-            self.frame = self.frame.from_json()
-            print(self.frame)
-            
+            recv_mes = event.data[2:].decode('utf-8')
+            print(recv_mes) 
 
 
 
@@ -55,7 +40,7 @@ async def main(
         config: QuicConfiguration,
         host: str,
         port: int,
-        argv: list,
+        message: str,
         local_port: int,
 )->None:
     async with connect(
@@ -67,34 +52,34 @@ async def main(
         create_protocol=User
     ) as client:
         client = cast(User, client)
-        await client.sync(argv)
-        await asyncio.sleep(10)
-    
+        await client.sync(message)
+        await asyncio.sleep(0.1)
+
 
 if __name__ == "__main__":
     argv = sys.argv
-    if len(argv) < 2:
+    if len(argv) != 5:
         print(f"Wrong input values: {argv}")
         exit()
 
-    host = "127.0.0.1" if argv[1] == "-l" else "185.198.152.16"
-    port = 8000     
-    uport= randint(2000, 6553)        
-    message = argv[2]
+    host = "127.0.0.1" if argv[1] == "d" else argv[1]
+    port = 8000        if argv[2] == "d" else int(argv[2])
+    uport= 2000        if argv[3] == "d" else int(argv[3])
+    message = argv[4]
 
     config = QuicConfiguration(
         is_client=True,
         max_datagram_frame_size=65536,
     )
     config.verify_mode = ssl.CERT_NONE
-        
+
     logging.debug("main task was added")
     asyncio.run(
         main(
             host=host,
             port=port,
             config=config,
-            argv=argv,
+            message=message,
             local_port=uport,
         )
     )
