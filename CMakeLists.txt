@@ -5,7 +5,7 @@ project(chat_ABob)
 #set(CMAKE_CXX_COMPILER /mnt/c/Users/HP/Downloads/CodeBlocks/MinGW/bin/g++.exe)
 
 #set(CMAKE_C_FLAGS -I. -Wall -Werror -fsanitize=address -g -static-libasan -Itquic/deps/boringssl/src/include/)
-set(CMAKE_CXX_FLAGS -Itquic/deps/boringssl/src/include/)
+set(CMAKE_CXX_FLAGS  -Itquic/deps/boringssl/src/include/)
 
 set(CMAKE_C_COMPILER   gcc)
 set(CMAKE_CXX_COMPILER g++)
@@ -31,4 +31,4 @@ add_executable(chat_ABob main.cpp
                          GUI/terminal.hpp
                          )
 
-target_link_libraries(chat_ABob sfml-graphics sfml-audio sfml-system sfml-window tgui)
+target_link_libraries(chat_ABob sfml-graphics sfml-audio sfml-system sfml-window ssl ev tgui tquic)
