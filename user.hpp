@@ -31,8 +31,8 @@ class User
     struct sockaddr_storage local_addr;
     socklen_t local_addr_len;
     SSL_CTX *ssl_ctx = NULL;
-    struct quic_tls_config_t *tls_config;
     struct quic_conn_t *conn = NULL;
+    struct quic_tls_config_t *tls_config = NULL;
     struct ev_loop *loop = NULL;
 
     quic_config_t *config = NULL;
@@ -46,6 +46,22 @@ class User
    // sf::UdpSocket socket;
     int create_socket(const char* host, const char* port);
     int create_config();
+    void timeout_callback(EV_P_ ev_timer *w, int revents);
+    void process_connections();
+
+    void give_message(message message_);
+
+    void conn_created(struct quic_conn_t *conn_);
+    void conn_established(struct quic_conn_t *conn);
+    void conn_closed(struct quic_conn_t *conn);
+    void stream_created(struct quic_conn_t *conn, uint64_t stream_id);
+    void stream_readable(struct quic_conn_t *conn, uint64_t stream_id);
+    void stream_writable(struct quic_conn_t *conn, uint64_t stream_id);
+    void stream_closed(struct quic_conn_t *conn, uint64_t stream_id);
+    int packets_send(struct quic_packet_out_spec_t *pkts, unsigned int count);   
+
+
+
 
     public:
     User(unsigned user_id_, std::string user_name_ = "Loshara");
