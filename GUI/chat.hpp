@@ -1,6 +1,6 @@
 #pragma once
-#include "../message.hpp"
 #include "terminal.hpp"
+#include "../message.hpp"
 #include <vector>
 
 class Chat{
