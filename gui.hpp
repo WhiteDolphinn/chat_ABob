@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <functional>
+#include <mutex>
 #define PY_SSIZE_T_CLEAN
 #include <python3.10/Python.h>
 #include <python3.10/structmember.h>
@@ -41,6 +43,14 @@ class Gui
 
 
     tgui::Gui gui;
+
+    char* code;
+    std::function<void(char*)> add_chat;
+    std::function<void(char*)> add_message;
+
+    char* current_chat_name;
+
+    std::mutex mutex;
 
     Gui();
     ~Gui();
