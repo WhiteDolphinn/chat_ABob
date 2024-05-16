@@ -25,7 +25,6 @@
 class User
 {
     private:
-    quic_endpoint_t *quic_endpoint = NULL;
     ev_timer timer;
     int sock;
     struct sockaddr_storage local_addr;
@@ -46,18 +45,17 @@ class User
    // sf::UdpSocket socket;
     int create_socket(const char* host, const char* port);
     int create_config();
-    void timeout_callback(EV_P_ ev_timer *w, int revents);
-    void process_connections();
+    //void timeout_callback(EV_P_ ev_timer *w, int revents);
 
     void give_message(message message_);
 
     void conn_created(struct quic_conn_t *conn_);
-    void conn_established(struct quic_conn_t *conn);
-    void conn_closed(struct quic_conn_t *conn);
-    void stream_created(struct quic_conn_t *conn, uint64_t stream_id);
-    void stream_readable(struct quic_conn_t *conn, uint64_t stream_id);
-    void stream_writable(struct quic_conn_t *conn, uint64_t stream_id);
-    void stream_closed(struct quic_conn_t *conn, uint64_t stream_id);
+    void conn_established();
+    void conn_closed();
+    void stream_created(uint64_t stream_id);
+    void stream_readable(uint64_t stream_id);
+    void stream_writable(uint64_t stream_id);
+    void stream_closed(uint64_t stream_id);
     int packets_send(struct quic_packet_out_spec_t *pkts, unsigned int count);   
 
 
@@ -77,11 +75,15 @@ class User
         quic_config_free(config);
     };
 
+    quic_endpoint_t *quic_endpoint = NULL;
+    void process_connections();
 
     void mainloop();
 
     unsigned get_user_id();
     std::string get_user_name();
     //const std::vector<Chat>& get_chats();
-    void give_message(message message_);
+    //void give_message(message message_);
 };
+
+void timeout_callback(EV_P_ ev_timer *w, int revents);

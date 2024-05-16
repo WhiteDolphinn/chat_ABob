@@ -65,6 +65,7 @@ async def main(
 
 if __name__ == "__main__":
     argv = sys.argv
+
     if len(argv) != 5:
         print(f"Wrong input values: {argv}")
         exit()
