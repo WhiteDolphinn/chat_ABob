@@ -131,6 +131,12 @@ void Gui::draw()
     //button->setText("zhopa");
     button->onPress([=]
     {
+        std::cout << current_chat_name << std::endl;
+        for(auto& chat: user.chats)
+        {
+                std::cout << chat.name << std::endl;
+        }
+
         mutex.lock();
         auto text = edit_box->getText();
         if(text.empty())
@@ -142,8 +148,8 @@ void Gui::draw()
         //std::string m = "print(\"hello\")";
         std::string m = R"(import sys
 sys.path.append('.')
-import run
-run.push_message(")";
+import proxy
+proxy.push_message(")";
         m += std::string(current_chat_name);
         m += "\", \"";
         m += std::string(text);
@@ -210,9 +216,60 @@ run.push_message(")";
         });
 
         gui.add(message_box);
-
-
     }
+
+    tgui::Button::Ptr create_chat_button = tgui::Button::create();
+    create_chat_button->setPosition("0%", "90%");
+    create_chat_button->setSize("30%", "10%");
+    gui.add(create_chat_button);
+
+    std::shared_ptr<tgui::MessageBox> create_chat_box = tgui::MessageBox::create();
+    create_chat_button->onPress([=]
+    {
+        if(user.chats.size() >= MAX_COUNT_OF_CHATS)
+            return;
+
+        create_chat_box->setSize("50%", "50%");
+        create_chat_box->setPosition("30%", "0%");
+
+        std::shared_ptr<tgui::EditBox> edit_create_chat_box = tgui::EditBox::create();
+        tgui::Button::Ptr create_chat_button = tgui::Button::create();
+
+        create_chat_box->add(edit_create_chat_box, "MyWidgetName");
+        edit_create_chat_box->setPosition("35%", "70%");
+        edit_create_chat_box->setSize("50%", 50);
+
+        create_chat_button->setPosition("85%", "70%");
+        create_chat_button->setSize(50, 50);
+        create_chat_box->add(create_chat_button);
+
+        create_chat_button->onPress([=]
+        {
+            auto text = edit_create_chat_box->getText();
+            if(text.empty())
+                return;
+
+            
+            gui.remove(create_chat_box);
+            std::string m = R"(import sys
+sys.path.append('.')
+import proxy
+proxy.create_chat(")";
+        m += std::string(text);
+        m += "\")";
+        PyRun_SimpleString(m.c_str());
+
+        Chat chat{.name = std::string(text).substr(0, std::string(text).find(":"))};
+        std::cout << "\'" << chat.name << "\'" << std::endl;
+        user.chats.push_back(chat);
+        add_chat((char*)((user.chats.end()-1)->name).c_str());
+        std::cout << "\'" << (user.chats.end()-1)->name  << "\'" << std::endl;
+        
+        });
+
+        gui.add(create_chat_box);
+    });
+
 
     std::vector<tgui::Button::Ptr> chat_buttons;
 
