@@ -34,6 +34,7 @@ class SSP(QuicConnectionProtocol):
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event,  StreamDataReceived):
+            print("eee")
             src.dump.event(event_=event)
             frame = Frame(event).from_json()
             src.dump.frame_dump(frame)
@@ -44,6 +45,10 @@ class SSP(QuicConnectionProtocol):
                 self.quic_send(event.stream_id, Den())
             elif frame.type == TYPE.CON:
                 self.chat_control(frame=frame, event=event)
+            elif frame.type == TYPE.MES:
+                self.chat_push(frame=frame, event=event)
+            elif frame.type == TYPE.PUL:
+                self.pull(frame=frame, event=event)
 
 
     def sing_up(self, frame: Sig, event: StreamDataReceived):
@@ -60,6 +65,7 @@ class SSP(QuicConnectionProtocol):
 
 
     def chat_control(self, frame: ControlFrame, event: StreamDataReceived):
+        print(frame)
         if frame.action == ACTION.CREAT:
             chat_id = self.chats_db.add(self.user)
             self.users_db.update_user(self.user)
@@ -96,7 +102,6 @@ class SSP(QuicConnectionProtocol):
                 if chat.admin_id == self.user.id:
                     answer = Den()
                 else:
-                    print("eee")
                     user = self.user
                     answer = chat.ext_user(user)
                     if isinstance(answer, Ack):
@@ -121,6 +126,25 @@ class SSP(QuicConnectionProtocol):
 
             if frame.action == ACTION.INFO:
                 self.quic_send(event.stream_id, ChatInfoFrame(chat=chat.to_json()))
+
+
+    def chat_push(self, frame: MessageFrame, event: StreamDataReceived):
+        chat = src.chatlist.Chat()
+        chat.from_json(self.chats_db.find(frame.chat_id)[0][2])
+        answer = chat.add_message(self.user, frame)
+        self.quic_send(event.stream_id, answer)
+
+
+    def pull(self, frame: PullFrame, event: StreamDataReceived):
+        chat = src.chatlist.Chat()
+        chat.from_json(self.chats_db.find(frame.chat_id)[0][2])
+        answer = chat.find(frame.message_id)
+        if answer:
+            self.quic_send(event.stream_id, ChtFrame(chat_id=frame.chat_id, message=answer))
+        else:
+            self.quic_send(event.stream_id, Den())
+
+        
 
 
             

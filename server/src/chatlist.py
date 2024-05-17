@@ -64,9 +64,28 @@ class Chat():
         self.cursor     = self.connection.cursor()
         self.cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS Chat{self.chat_id}(
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
             name TEXT NOT NULL,
             time TEXT NOT NULL,
             text TEXT NOT NULL)''')
+        self.connection.commit()
+
+        if not self.find(id=0):
+            self.cursor.execute(
+            f"INSERT INTO Chat{self.chat_id}(id, user_id ,name, time, text) VALUES (?, ?, ?, ?, ?)",
+            (0, 0, "0", '', ''))
+            self.connection.commit()
+
+    def find(self, id):
+        self.cursor.execute(f"SELECT * FROM Chat{self.chat_id} WHERE id = ?", (id,))
+        return self.cursor.fetchall()
+
+    def get_available_message_id(self):
+        n = int(self.find(0)[0][2]) + 1
+        self.cursor.execute(f"UPDATE Chat{self.chat_id} SET name = ? WHERE id = ?", (str(n), 0))
+        self.connection.commit()
+        return n
         
 
     def add_user(self, user: src.user.User, added_user: src.user.User):
@@ -85,7 +104,7 @@ class Chat():
     
     
     def ext_user(self, user: src.user.User):
-        print(user.id, self.userlist)
+        # print(user.id, self.userlist)
         if str(user.id) in self.userlist:
             del self.userlist[str(user.id)]
             return src.myjson.Ack()
@@ -95,12 +114,13 @@ class Chat():
     def add_message(self, 
                     user:src.user.User, 
                     event: src.myjson.MessageFrame):
-        if user.id not in self.userlist.keys():
+        if str(user.id) not in self.userlist:
             return src.myjson.Den()
         else:
             self.cursor.execute(
-            f"INSERT INTO Chats{self.chat_id}(name, time, text) VALUES (?, ?, ?)",
-            (user.name, event.time, event.text))
+            f"INSERT INTO Chat{self.chat_id}(id, user_id ,name, time, text) VALUES (?, ?, ?, ?, ?)",
+            (self.get_available_message_id(), user.id, user.name, event.time, event.text))
+            self.connection.commit()
             return src.myjson.Ack()
     
     def to_json(self):
@@ -116,3 +136,18 @@ class Chat():
         self.chat_id  = mess["chat_id"]
         self.admin_id = mess["admin_id"]
         self.userlist = json.loads(mess["userlist"])
+
+
+class Messege():
+    def __init__(self, chat_id, message_id, id, name='', time=0, text='', data = 0):
+        if not data:
+            self.chat_id    = chat_id
+            self.message_id = message_id
+            self.id         = id
+            self.name       = name
+            self.time       = time
+            self.text       = text
+        else:
+            pass
+
+            

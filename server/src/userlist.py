@@ -77,7 +77,7 @@ class UsersList():
             username = frame.name
             password = frame.password
         self.cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-        print(self.find(username=username))
+        # print(self.find(username=username))
         return password == self.cursor.fetchall()[0][2]
     
     def amout(self):

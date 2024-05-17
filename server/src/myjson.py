@@ -41,12 +41,19 @@ class Frame():
     struct  = ["type", "time"]
     type    = TYPE.DFT
     event   = 0
+    data    = 0
     mess    = 0
     time    = 0
     valid   = 1
 
-    def __init__(self, event = 0):
+    def __init__(self, event = 0, data = 0):
         try:
+            if data:
+                self.data = data
+                self.mess = json.loads(data[2::])
+                self.type = self.mess['type']
+                self.time = self.mess['time']
+                # event = 1
             if event:
                 self.event= event 
                 self.mess = json.loads(event.data[2:].decode('utf-8'))
@@ -60,17 +67,23 @@ class Frame():
 
     def from_json(self):
         if self.type == TYPE.SIG:
-            return Sig(self.event)
+            return Sig(event = self.event, data = self.data)
         if self.type == TYPE.ACK:
-            return Ack(self.event)
+            return Ack(event = self.event, data = self.data)
         if self.type == TYPE.DEN:
-            return Den(self.event)
+            return Den(event = self.event, data = self.data)
         if self.type == TYPE.INF:
-            return InfoFrame(event=self.event)
+            return InfoFrame(event = self.event, data = self.data)
         if self.type == TYPE.CON:
-            return ControlFrame(event=self.event)
+            return ControlFrame(event = self.event, data = self.data)
         if self.type == TYPE.CHI:
-            return ChatInfoFrame(event=self.event)
+            return ChatInfoFrame(event = self.event, data = self.data)
+        if self.type == TYPE.MES:
+            return MessageFrame(event = self.event, data = self.data)
+        if self.type == TYPE.PUL:
+            return PullFrame(event = self.event, data = self.data)
+        if self.type == TYPE.CHT:
+            return ChtFrame(event = self.event, data = self.data)
         if self.type == TYPE.DFT:
             return self
 
@@ -92,8 +105,8 @@ class Sig(Frame):
     name     = ''
     password = ''
 
-    def __init__(self, event=0, name = '', password = ''):
-        super().__init__(event)
+    def __init__(self, event=0, name = '', password = '', data = 0):
+        super().__init__(event=event, data=data)
         self.type = TYPE.SIG
         try:
             if event:
@@ -120,14 +133,14 @@ class Sig(Frame):
     
 
 class Ack(Frame):
-    def __init__(self, event=0):
-        super().__init__(event)
+    def __init__(self, event=0, data=0):
+        super().__init__(event=event, data=data)
         self.type = TYPE.ACK
 
 
 class Den(Frame):
-    def __init__(self, event=0):
-        super().__init__(event)
+    def __init__(self, event=0, data=0):
+        super().__init__(event=event, data=data)
         self.type = TYPE.DEN
 
 
@@ -140,12 +153,12 @@ class ControlFrame(Frame):
                  event = 0, 
                  chat_id = 0, 
                  user_id = 0, 
-                 action = ACTION.DEFAULT):
-        super().__init__(event)
+                 action = ACTION.DEFAULT,
+                 data = 0):
+        super().__init__(event=event, data=data)
         self.type = TYPE.CON
         try:
-            print(event)
-            if event:
+            if event or data:
                 self.event   = event
                 self.chat_id = int(self.mess["chat_id"])
                 self.user_id = int(self.mess["user_id"])
@@ -171,11 +184,11 @@ class ControlFrame(Frame):
 class InfoFrame(Frame):
     type = TYPE.INF
     user = None
-    def __init__(self, user = None, event = 0):
-        super().__init__(event=event)
+    def __init__(self, user = None, event = 0, data = 0):
+        super().__init__(event=event, data=data)
         self.user = user
 
-        if event:
+        if event or data:
             self.user = User()
             self.user.from_json(self.mess["user"])
 
@@ -191,11 +204,11 @@ class InfoFrame(Frame):
 class ChatInfoFrame(Frame):
     type = TYPE.CHI
     chat = None
-    def __init__(self, chat = None, event = 0):
-        super().__init__(event=event)
+    def __init__(self, chat = None, event = 0, data = 0):
+        super().__init__(event=event, data=data)
         self.chat = chat
 
-        if event:
+        if event or data:
             self.chat = self.mess["chat"]
 
     def to_json(self):
@@ -208,10 +221,11 @@ class ChatInfoFrame(Frame):
 
 
 class MessageFrame(Frame):
-    def __init__(self, event = 0, chat_id = 0,  text = ''):
-        super().__init__(self, event)
-        if event:
-            self.chat_id = self.mess["chad_id"]
+    def __init__(self, event = 0, chat_id = 0,  text = '', data = 0):
+        super().__init__(event=event, data=data)
+        self.type = TYPE.MES
+        if event or data:
+            self.chat_id = self.mess["chat_id"]
             self.text    = self.mess["text"]
         else:
             self.chat_id = chat_id
@@ -225,3 +239,46 @@ class MessageFrame(Frame):
                 "text":     self.text,
                 }).encode("utf-8")
         return struct.pack("!H", len(frame))+frame
+    
+
+class PullFrame(Frame):
+    def __init__(self, event = 0, chat_id = 0, message_id = 0, data = 0):
+        super().__init__(event=event, data=data)
+        self.type = TYPE.PUL
+        if event or data:
+            self.chat_id = self.mess["chat_id"]
+            self.message_id = self.mess["message_id"]
+        else:
+            self.chat_id = chat_id
+            self.message_id = message_id
+
+
+    def to_json(self):
+        frame = json.dumps({
+                "type":         self.type,
+                "chat_id":      self.chat_id,
+                "message_id":   self.message_id,
+                }).encode("utf-8")
+        return struct.pack("!H", len(frame))+frame
+    
+
+class ChtFrame(Frame):
+    def __init__(self, event = 0, chat_id = 0, message = 0, data = 0):
+        super().__init__(event=event, data=data)
+        self.type = TYPE.CHT
+        if event or data:
+            self.chat_id = self.mess["chat_id"]
+            self.message = self.mess["message"]
+        else:
+            self.chat_id = chat_id
+            self.message = message
+
+
+    def to_json(self):
+        frame = json.dumps({
+                "type":         self.type,
+                "chat_id":      self.chat_id,
+                "message":      self.message,
+                }).encode("utf-8")
+        return struct.pack("!H", len(frame))+frame
+    

@@ -38,6 +38,10 @@ class User(QuicConnectionProtocol):
             await self.del_chat()
         elif action == "chat":
             await self.get_info_chat()
+        elif action == "send":
+            await self.send_message()
+        elif action == "get":
+            await self.get_message()
         else: 
             self.loop()
         
@@ -81,6 +85,18 @@ class User(QuicConnectionProtocol):
         frame = ControlFrame(action=ACTION.INFO, chat_id=chat_id)
         await self.send(frame)
 
+    async def send_message(self):
+        chat_id = input("chat id:")
+        message = input("message:")
+        frame = MessageFrame(chat_id=chat_id, text=message)
+        await self.send(frame)
+
+    async def get_message(self):
+        chat_id = input("chat id:")
+        message_id = input("mess id:")
+        frame = PullFrame(chat_id=chat_id, message_id=message_id)
+        await self.send(frame)
+
 
     async def send(self, frame)->None:
         self._quic.send_stream_data(self.stream_id, frame.to_json(), end_stream=False)
@@ -90,20 +106,17 @@ class User(QuicConnectionProtocol):
 
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            print(event.data[2:].decode('utf-8'))
             frame = Frame(event).from_json()
-            print(type(frame))
+            print(frame)
             if isinstance(frame, InfoFrame):
                 self.user = frame.user
             if isinstance(frame, ChatInfoFrame):
                 self.chat = Chat()
                 self.chat.from_json(frame.mess["chat"])
                 print(self.chat.userlist)
+            print(frame.mess)
 
-            
-
-
-
+        
 async def main(
         config: QuicConfiguration,
         host: str,
