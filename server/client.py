@@ -11,6 +11,7 @@ from aioquic.quic.events import QuicEvent, StreamDataReceived
 
 from src.myjson import *
 from src.chatlist import *
+from random import randint
 
 class User(QuicConnectionProtocol):
     def __init__(self, *args, **kwargs):
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     host = "127.0.0.1" if argv[1] == "d" else argv[1]
     port = 8000 if argv[2] == "d" else int(argv[2])
-    uport = 2000 if argv[3] == "d" else int(argv[3])
+    uport = randint(1000, 65000)
 
     config = QuicConfiguration(
         is_client=True,
